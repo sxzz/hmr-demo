@@ -7,16 +7,19 @@ let needUpdates: Set<ModuleNode> = new Set()
 
 export default defineConfig({
   plugins: [
-    vue(),
     {
       name: 'hack-fn',
-      enforce: 'post',
       transform(code, id) {
-        if (id.endsWith('App.vue')) {
+        if (id.endsWith('Comp.vue')) {
           return code.replace('MAGIC_FN()', String(0.5 + i))
         }
       },
+    },
+    vue(),
 
+    {
+      name: 'hack-hmr',
+      enforce: 'post',
       configureServer(server) {
         server.watcher.on('change', (file) => {
           console.log('changed', file)
@@ -26,7 +29,7 @@ export default defineConfig({
           i++
 
           const modules = server.moduleGraph.getModulesByFile(
-            path.resolve(__dirname, 'src/App.vue'),
+            path.resolve(__dirname, 'src/Comp.vue'),
           )
           for (const mod of modules || []) {
             server.moduleGraph.invalidateModule(mod)
@@ -36,8 +39,10 @@ export default defineConfig({
         })
       },
 
-      handleHotUpdate() {
-        return Array.from(needUpdates)
+      handleHotUpdate({ modules }) {
+        const mod = [...needUpdates, ...modules]
+        needUpdates.clear()
+        return mod
       },
     },
   ],

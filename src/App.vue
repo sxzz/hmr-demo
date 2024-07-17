@@ -1,17 +1,8 @@
 <script setup lang="ts">
-declare function MAGIC_FN(): number
-
-const int = MAGIC_FN()
-
-function trigger() {
-  import.meta.hot?.send('inc')
-}
+import Comp from './Comp.vue'
 </script>
 
 <template>
-  <div>
-    <button @click="trigger">trigger update</button>
-    {{ int }}
-  </div>
-  <input />
+  <Comp />
+  <input value="value will not be reset" />
 </template>
