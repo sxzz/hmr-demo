@@ -1,9 +1,9 @@
-import { defineConfig, ModuleNode } from 'vite'
+import { defineConfig, EnvironmentModuleNode } from 'vite'
 import vue from '@vitejs/plugin-vue'
 import path from 'path'
 
 let i = 0
-let needUpdates: Set<ModuleNode> = new Set()
+let needUpdates: Set<EnvironmentModuleNode> = new Set()
 
 export default defineConfig({
   plugins: [
@@ -28,18 +28,20 @@ export default defineConfig({
         server.ws.on('inc', async () => {
           i++
 
-          const modules = server.moduleGraph.getModulesByFile(
-            path.resolve(__dirname, 'src/Comp.vue'),
-          )
-          for (const mod of modules || []) {
-            server.moduleGraph.invalidateModule(mod)
-            server.watcher.emit('change', mod.id)
-            needUpdates.add(mod)
+          for (const env of Object.values(server.environments)) {
+            const modules = env.moduleGraph.getModulesByFile(
+              path.resolve(__dirname, 'src/Comp.vue'),
+            )
+            for (const mod of modules || []) {
+              env.moduleGraph.invalidateModule(mod)
+              server.watcher.emit('change', mod.id)
+              needUpdates.add(mod)
+            }
           }
         })
       },
 
-      handleHotUpdate({ modules }) {
+      hotUpdate({ modules }) {
         const mod = [...needUpdates, ...modules]
         needUpdates.clear()
         return mod
